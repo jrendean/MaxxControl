@@ -1,0 +1,243 @@
+' {$STAMP BS2}
+
+'----------
+' Constants
+'----------
+PIN_MC_CLAW_A          CON 0
+PIN_MC_CLAW_B          CON 1
+PIN_MC_WRIST_A         CON 2
+PIN_MC_WRIST_B         CON 3
+PIN_MC_SHOULDER_A      CON 4
+PIN_MC_SHOULDER_B      CON 5
+PIN_MC_LEFT_WHEEL_A    CON 6
+PIN_MC_LEFT_WHEEL_B    CON 7
+PIN_MC_RIGHT_WHEEL_A   CON 8
+PIN_MC_RIGHT_WHEEL_B   CON 9
+PIN_BT_RX              CON 10
+PIN_BT_TX              CON 11
+'PIN_NC                 CON 12
+'PIN_NC1                CON 13
+PIN_VOICE_PLAY         CON 14
+PIN_VOICE_RECORD       CON 15
+
+
+'----------
+' Variables
+'----------
+inputData           VAR Byte(6)
+blankData           VAR Byte(6)
+control             VAR Byte
+action              VAR Byte
+
+
+'----------
+' Setup
+'----------
+OUTPUT PIN_MC_CLAW_A
+OUTPUT PIN_MC_CLAW_B
+OUTPUT PIN_MC_WRIST_A
+OUTPUT PIN_MC_WRIST_B
+OUTPUT PIN_MC_SHOULDER_A
+OUTPUT PIN_MC_SHOULDER_B
+OUTPUT PIN_MC_LEFT_WHEEL_A
+OUTPUT PIN_MC_LEFT_WHEEL_B
+OUTPUT PIN_MC_RIGHT_WHEEL_A
+OUTPUT PIN_MC_RIGHT_WHEEL_B
+INPUT  PIN_BT_RX
+OUTPUT PIN_BT_TX
+'OUTPUT PIN_NC
+'OUTPUT PIN_NC1
+OUTPUT PIN_VOICE_PLAY
+OUTPUT PIN_VOICE_RECORD
+
+
+'----------
+' Main Loop
+'----------
+MainLoop:
+SERIN PIN_BT_RX, 84, 50, InputTimeout, [STR inputData\7]
+DEBUG STR inputData, CR
+IF (inputData(0) = "s") THEN SetParser
+PAUSE 200
+
+InputTimeout:
+GOTO MainLoop
+
+
+'----------
+' Parsers
+'----------
+SetParser:
+control = inputData(2)
+DEBUG "SetParser: ", control, CR
+IF (control = "h") THEN StopParser
+IF (control = "w") THEN WheelParser
+IF (control = "a") THEN ArmParser
+IF (control = "r") THEN WristParser
+IF (control = "c") THEN ClawParser
+GOTO MainLoop
+
+StopParser:
+DEBUG "StopParser: ", CR
+LOW PIN_MC_CLAW_A
+LOW PIN_MC_CLAW_B
+LOW PIN_MC_WRIST_A
+LOW PIN_MC_WRIST_B
+LOW PIN_MC_SHOULDER_A
+LOW PIN_MC_SHOULDER_B
+LOW PIN_MC_LEFT_WHEEL_A
+LOW PIN_MC_LEFT_WHEEL_B
+LOW PIN_MC_RIGHT_WHEEL_A
+LOW PIN_MC_RIGHT_WHEEL_B
+GOTO MainLoop
+
+WheelParser:
+action = inputData(4)
+DEBUG "WheelParser: ", action, CR
+IF (action = "f") THEN MoveForward
+IF (action = "b") THEN MoveBackward
+IF (action = "l") THEN MoveLeft
+IF (action = "r") THEN MoveRight
+GOTO MainLoop
+
+ArmParser:
+action = inputData(4)
+DEBUG "ArmParser: ", action, CR
+IF (action = "u") THEN ArmUp
+IF (action = "d") THEN ArmDown
+GOTO MainLoop
+
+WristParser:
+action = inputData(4)
+DEBUG "WristParser: ", action, CR
+IF (action = "a") THEN WristRotateAway
+IF (action = "t") THEN WristRotateTowards
+GOTO MainLoop
+
+ClawParser:
+action = inputData(4)
+DEBUG "ClawParser: ", action, CR
+IF (action = "r") THEN ClawRotate
+IF (action = "o") THEN ClawOpen
+GOTO MainLoop
+
+
+
+
+
+'----------
+' Wheel Commands
+'----------
+MoveForward:
+DEBUG "MoveForward:", CR
+'left forward
+HIGH PIN_MC_LEFT_WHEEL_A
+LOW PIN_MC_LEFT_WHEEL_B
+'right forward
+HIGH PIN_MC_RIGHT_WHEEL_A
+LOW PIN_MC_RIGHT_WHEEL_B
+GOTO MainLoop
+
+MoveBackward:
+DEBUG "MoveBackward:", CR
+'left backward
+LOW PIN_MC_LEFT_WHEEL_A
+HIGH PIN_MC_LEFT_WHEEL_B
+'right backward
+LOW PIN_MC_RIGHT_WHEEL_A
+HIGH PIN_MC_RIGHT_WHEEL_B
+GOTO MainLoop
+
+MoveLeft:
+DEBUG "MoveLeft:", CR
+'left backward
+LOW PIN_MC_LEFT_WHEEL_A
+HIGH PIN_MC_LEFT_WHEEL_B
+'right forward
+HIGH PIN_MC_RIGHT_WHEEL_A
+LOW PIN_MC_RIGHT_WHEEL_B
+GOTO MainLoop
+
+MoveRight:
+DEBUG "MoveRight:", CR
+'left forward
+HIGH PIN_MC_LEFT_WHEEL_A
+LOW PIN_MC_LEFT_WHEEL_B
+'right backward
+LOW PIN_MC_RIGHT_WHEEL_A
+HIGH PIN_MC_RIGHT_WHEEL_B
+GOTO MainLoop
+
+
+'----------
+' Claw Commands
+'----------
+ClawRotate:
+DEBUG "ClawRotate:", CR
+LOW PIN_MC_CLAW_A
+HIGH PIN_MC_CLAW_B
+GOTO MainLoop
+
+ClawOpen:
+DEBUG "ClawOpen:", CR
+HIGH PIN_MC_CLAW_A
+LOW PIN_MC_CLAW_B
+GOTO MainLoop
+
+
+'----------
+' Wrist Commands
+'----------
+WristRotateTowards:
+DEBUG "WristRotateTowards:", CR
+HIGH PIN_MC_WRIST_A
+LOW PIN_MC_WRIST_B
+GOTO MainLoop
+
+WristRotateAway:
+DEBUG "WristRotateAway:", CR
+LOW PIN_MC_WRIST_A
+HIGH PIN_MC_WRIST_B
+GOTO MainLoop
+
+
+'----------
+' Arm Commands
+'----------
+ArmUp:
+DEBUG "ArmUp:", CR
+LOW PIN_MC_SHOULDER_A
+HIGH PIN_MC_SHOULDER_B
+GOTO MainLoop
+
+ArmDown:
+DEBUG "ArmDown:", CR
+HIGH PIN_MC_SHOULDER_A
+LOW PIN_MC_SHOULDER_B
+GOTO MainLoop
+
+
+
+'----------
+' Voice Commands
+'----------
+StartRecordVoice:
+HIGH PIN_VOICE_RECORD
+GOTO MainLoop
+
+StopRecordingVoice:
+LOW PIN_VOICE_RECORD
+GOTO MainLoop
+
+StartVoicePlay:
+HIGH PIN_VOICE_PLAY
+GOTO MainLoop
+
+StopVoicePlay:
+LOW PIN_VOICE_PLAY
+GOTO MainLoop
+
+
+
+ProgramEnd:
+END
